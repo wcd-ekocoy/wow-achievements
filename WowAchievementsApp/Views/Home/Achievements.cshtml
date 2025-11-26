@@ -1,0 +1,99 @@
+@model WowAchievementsApp.Models.CharacterAchievements
+@{
+    ViewData["Title"] = "Achievements";
+    var characterName = ViewBag.CharacterName as string ?? "Unknown";
+    var realmSlug = ViewBag.RealmSlug as string ?? "unknown";
+    var region = ViewBag.Region as string ?? "us";
+}
+
+<div class="text-center mb-4">
+    <h1 class="display-4">Achievements</h1>
+    <p class="text-muted">
+        <strong>@characterName</strong> on <strong>@realmSlug</strong> (Region: <strong>@region</strong>)
+    </p>
+    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to Characters</a>
+</div>
+
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+{
+    <div class="alert alert-danger text-center">
+        <p><strong>Error:</strong> @ViewBag.ErrorMessage</p>
+    </div>
+}
+
+@if (Model != null)
+{
+    <div class="mb-3">
+        <h3>Total Achievement Points: <strong>@Model.TotalPoints</strong></h3>
+        <p>Total Achievements: <strong>@Model.Achievements.Count</strong></p>
+    </div>
+
+    @if (Model.Achievements.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Points</th>
+                        <th>Completed</th>
+                        <th>Date Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var achievement in Model.Achievements.OrderByDescending(a => a.CompletedTimestamp.HasValue).ThenByDescending(a => a.CompletedTimestamp))
+                    {
+                        var isCompleted = achievement.CompletedTimestamp.HasValue || achievement.Criteria?.IsCompleted == true;
+                        var completedDate = achievement.CompletedTimestamp.HasValue 
+                            ? DateTimeOffset.FromUnixTimeMilliseconds(achievement.CompletedTimestamp.Value).DateTime 
+                            : (DateTime?)null;
+                        
+                        <tr class="@(isCompleted ? "table-success" : "")">
+                            <td><strong>@(achievement.AchievementInfo?.Name ?? $"Achievement {achievement.Id}")</strong></td>
+                            <td>@(achievement.AchievementInfo?.Description ?? "-")</td>
+                            <td>@(achievement.AchievementInfo?.Points?.ToString() ?? "-")</td>
+                            <td>
+                                @if (isCompleted)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (isCompleted && completedDate.HasValue)
+                                {
+                                    @completedDate.Value.ToString("yyyy-MM-dd HH:mm")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <p>No achievements found for this character.</p>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        <p>Unable to load achievements. Please try again later.</p>
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <p class="small text-muted mt-2">@ViewBag.ErrorMessage</p>
+        }
+    </div>
+}
+

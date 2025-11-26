@@ -1,0 +1,71 @@
+# User-specific files
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+
+# Packages
+*.nupkg
+*.snupkg
+*.lib
+*.orig
+packages/
+
+# Rider
+.idea/
+*.iml
+
+# Visual Studio Code
+.vscode/
+
+# Environment variables
+.env
+.env.*
+
+# Azure App Service files
+# These files are created when deploying to Azure App Service
+# but should not be committed to source control.
+*.pubxml
+*.Publish.xml
+
+# Log files
+*.log
+
+# Windows thumbnail cache
+Thumbs.db
+
+# macOS files
+.DS_Store
+
+# ReSharper
+*.DotSettings
+
+# SonarSource
+.sonarqube/
+# SonarQube generated files
+.sonar/
+
+# Test results
+TestResults/
+
+# Editor config
+.editorconfig
+
+# NPM and Yarn
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# misc
+*.pid
+*.seed
+*.lck
+*.sqlite3
+*.sqlite
