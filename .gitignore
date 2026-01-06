@@ -55,7 +55,7 @@ Thumbs.db
 TestResults/
 
 # Editor config
-.editorconfig
+#.editorconfig
 
 # NPM and Yarn
 node_modules/

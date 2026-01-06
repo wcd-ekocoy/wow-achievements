@@ -88,12 +88,14 @@ public class HomeController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> Achievements(string realmSlug, string characterName)
+    public async Task<IActionResult> Achievements(string realmSlug, string characterName, int page = 1)
     {
         if (string.IsNullOrEmpty(realmSlug) || string.IsNullOrEmpty(characterName))
         {
             return RedirectToAction("Index");
         }
+
+        if (page < 1) page = 1;
 
         try
         {
@@ -120,16 +122,48 @@ public class HomeController : Controller
                 _logger.LogInformation("Total achievements: {Count}, Total points: {Points}", achievements.Achievements?.Count ?? 0, achievements.TotalPoints);
             }
 
-            ViewBag.CharacterName = characterName;
-            ViewBag.RealmSlug = realmSlug;
-            ViewBag.Region = region;
-
             if (achievements == null)
             {
                 ViewBag.ErrorMessage = "Failed to load achievements. The API returned null. Check server logs for details.";
+                ViewBag.CharacterName = characterName;
+                ViewBag.RealmSlug = realmSlug;
+                ViewBag.Region = region;
+                return View(null);
             }
 
-            return View(achievements);
+            // Pagination Logic
+            int pageSize = 100;
+            var allAchievements = achievements.Achievements ?? new List<Achievement>();
+            
+            // Apply sorting (Moved from View to Controller for consistent pagination)
+            var sortedAchievements = allAchievements
+                .OrderByDescending(a => a.CompletedTimestamp.HasValue)
+                .ThenByDescending(a => a.CompletedTimestamp)
+                .ToList();
+
+            var totalItems = sortedAchievements.Count;
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var paginatedList = sortedAchievements
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var viewModel = new AchievementsViewModel
+            {
+                CharacterAchievements = achievements,
+                PaginatedAchievements = paginatedList,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                PageSize = pageSize,
+                RealmSlug = realmSlug,
+                CharacterName = characterName,
+                Region = region
+            };
+
+            return View(viewModel);
         }
         catch (Exception ex)
         {

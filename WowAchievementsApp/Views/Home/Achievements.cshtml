@@ -1,9 +1,10 @@
-@model WowAchievementsApp.Models.CharacterAchievements
+@model WowAchievementsApp.Models.AchievementsViewModel
 @{
     ViewData["Title"] = "Achievements";
-    var characterName = ViewBag.CharacterName as string ?? "Unknown";
-    var realmSlug = ViewBag.RealmSlug as string ?? "unknown";
-    var region = ViewBag.Region as string ?? "us";
+    // Use ViewModel properties
+    var characterName = Model?.CharacterName ?? ViewBag.CharacterName as string ?? "Unknown";
+    var realmSlug = Model?.RealmSlug ?? ViewBag.RealmSlug as string ?? "unknown";
+    var region = Model?.Region ?? ViewBag.Region as string ?? "us";
 }
 
 <div class="text-center mb-4">
@@ -21,15 +22,21 @@
     </div>
 }
 
-@if (Model != null)
+@if (Model != null && Model.CharacterAchievements != null)
 {
     <div class="mb-3">
-        <h3>Total Achievement Points: <strong>@Model.TotalPoints</strong></h3>
-        <p>Total Achievements: <strong>@Model.Achievements.Count</strong></p>
+        <h3>Total Achievement Points: <strong>@Model.CharacterAchievements.TotalPoints</strong></h3>
+        <p>Total Achievements: <strong>@Model.CharacterAchievements.Achievements.Count</strong></p>
     </div>
 
-    @if (Model.Achievements.Count > 0)
+    @if (Model.PaginatedAchievements != null && Model.PaginatedAchievements.Count > 0)
     {
+        <div class="row mb-2">
+            <div class="col-md-12 text-end text-muted">
+                Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) - @Math.Min(Model.CurrentPage * Model.PageSize, Model.CharacterAchievements.Achievements.Count) of @Model.CharacterAchievements.Achievements.Count
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead>
@@ -42,7 +49,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var achievement in Model.Achievements.OrderByDescending(a => a.CompletedTimestamp.HasValue).ThenByDescending(a => a.CompletedTimestamp))
+                    @foreach (var achievement in Model.PaginatedAchievements)
                     {
                         var isCompleted = achievement.CompletedTimestamp.HasValue || achievement.Criteria?.IsCompleted == true;
                         var completedDate = achievement.CompletedTimestamp.HasValue 
@@ -78,6 +85,33 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination Controls -->
+        if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Achievements navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Achievements", new { realmSlug = Model.RealmSlug, characterName = Model.CharacterName, page = Model.CurrentPage - 1 })" tabindex="-1">Previous</a>
+                    </li>
+                    
+                    @* Show simplified pagination for large number of pages *@
+                    @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Achievements", new { realmSlug = Model.RealmSlug, characterName = Model.CharacterName, page = i })">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Achievements", new { realmSlug = Model.RealmSlug, characterName = Model.CharacterName, page = Model.CurrentPage + 1 })">Next</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="text-center text-muted small">
+                Page @Model.CurrentPage of @Model.TotalPages
+            </div>
+        }
     }
     else
     {

@@ -4,6 +4,9 @@ using WowAchievementsApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure to only listen on HTTPS port 5089
+builder.WebHost.UseUrls("https://localhost:5089");
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<BlizzardService>();
@@ -38,9 +41,11 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
 }
+
+// Enable HSTS since we only use HTTPS
+// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+app.UseHsts();
 
 // HTTPS redirection not needed since we only listen on HTTPS
 app.UseStaticFiles(); // Ensure static files are served
